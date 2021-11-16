@@ -51,24 +51,37 @@ ptr alloc(int size) {
     return size_error;
   } else if (size <= calc_real_available_memory()) {
     int allocated_memory = 0;
-    ptr started_value = current_block_ptr;
+    ptr* started_value = &current_block_ptr;
     while (size > allocated_memory) {
       allocated_memory += block_size - sizeof(block);
       current_block_ptr.block->header |= IS_EXTENDED;
       current_block_ptr.block += block_size;
     }
     current_block_ptr.block->header |= !IS_EXTENDED;
-    return started_value;
+    return *started_value;
   }
   ptr size_error;
   size_error.error = 1;
   return size_error;
 }
 
+int free_ptr(ptr pointer){
+  if (pointer.error!=0){
+    return pointer.error;
+  }
+
+  while (pointer.block->header&IS_EXTENDED){
+    pointer.block->header|=IS_EXTENDED;
+  }
+
+  return 0;
+}
+
 int main() {
 
   init_memory(64, 10);
-  ptr x = alloc(631);
+  ptr x = alloc(1);
+  free_ptr(x);
 
   return 0;
 }
