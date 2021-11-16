@@ -58,8 +58,8 @@ ptr alloc(int size) {
       current_block_ptr.block->header |= !IS_BLOCK_FREE;
       current_block_ptr.block += block_size;
     }
-    current_block_ptr.block->header |= !IS_EXTENDED;
-    return *started_value;
+    (current_block_ptr.block-block_size)->header ^= IS_EXTENDED;
+    return started_value;
   }
   ptr size_error;
   size_error.error = 1;
@@ -97,10 +97,6 @@ void printer_block_info(char* name, ptr block_pointer){
   printf("\tis_writable = %d\n", (block_pointer.block->header&IS_WRITABLE)>0);
 
   printf("---------------------------------\n");
-
-//  for (int i = 0; i < ; ++i) {
-//
-//  }
 }
 
 int main() {
