@@ -55,6 +55,7 @@ ptr alloc(int size) {
     while (size > allocated_memory) {
       allocated_memory += block_size - sizeof(block);
       current_block_ptr.block->header |= IS_EXTENDED;
+      current_block_ptr.block->header |= !IS_BLOCK_FREE;
       current_block_ptr.block += block_size;
     }
     current_block_ptr.block->header |= !IS_EXTENDED;
@@ -70,17 +71,47 @@ int free_ptr(ptr pointer){
     return pointer.error;
   }
 
+  int freed_blocks_count = 0;
   while (pointer.block->header&IS_EXTENDED){
-    pointer.block->header|=IS_EXTENDED;
+    pointer.block->header&=!IS_EXTENDED;
+    pointer.block->header&=IS_BLOCK_FREE;
+    freed_blocks_count++;
+  }
+
+  if (pointer.block == current_block_ptr.block){
+    current_block_ptr.block-=freed_blocks_count*block_size;
   }
 
   return 0;
 }
 
+void printer_block_info(char* name, ptr block_pointer){
+  printf("---------- %s ---------\n", name);
+
+  printf("real_address = %ul\n", block_pointer.block);
+
+  printf("flags: \n");
+  printf("\tis_free =     %d\n", (block_pointer.block->header&IS_BLOCK_FREE)>0);
+  printf("\tis_extended = %d\n", (block_pointer.block->header&IS_EXTENDED)>0);
+  printf("\tis_readable = %d\n", (block_pointer.block->header&IS_READABLE)>0);
+  printf("\tis_writable = %d\n", (block_pointer.block->header&IS_WRITABLE)>0);
+
+  printf("---------------------------------\n");
+
+//  for (int i = 0; i < ; ++i) {
+//
+//  }
+}
+
 int main() {
 
-  init_memory(64, 10);
-  ptr x = alloc(1);
+  init_memory(32, 10);
+  printer_block_info("after init", current_block_ptr);
+  ptr x = alloc(3);
+  printer_block_info("allocated pointer", x);
+  printer_block_info("current pointer", current_block_ptr);
+
+
   free_ptr(x);
 
   return 0;
