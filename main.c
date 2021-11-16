@@ -20,7 +20,7 @@ int block_size;
 int blocks_count;
 int memory_size;
 
-void copy_ptr(ptr* source, ptr* dist){
+void copy_ptr(ptr *source, ptr *dist) {
   dist->block = source->block;
   dist->block->header = source->block->header;
   dist->error = source->error;
@@ -89,6 +89,9 @@ int free_ptr(ptr pointer) {
 
   if (pointer.block == current_block_ptr.block) {
     current_block_ptr.block -= freed_blocks_count * block_size;
+    while ((current_block_ptr.block - block_size)->header & IS_BLOCK_FREE && current_block_ptr.block!=main_ptr.block) {
+      current_block_ptr.block -= block_size;
+    }
   }
 
   return 0;
@@ -135,13 +138,19 @@ int main() {
   ptr x = alloc(100);
   ptr y = alloc(100);
   ptr z = alloc(100);
-  ptr a = alloc(1);
+  ptr a = alloc(100);
   ptr b = alloc(1);
+  ptr c = alloc(1);
+  ptr d = alloc(1);
+  ptr e = alloc(1);
   print_block_info("x allocated pointer", x);
   print_block_info("y allocated pointer", y);
   print_block_info("z allocated pointer", z);
   print_block_info("a allocated pointer", a);
   print_block_info("b allocated pointer", b);
+  print_block_info("c allocated pointer", c);
+  print_block_info("d allocated pointer", d);
+  print_block_info("e allocated pointer", e);
   print_block_info("current pointer", current_block_ptr);
 
   free_ptr(x);
