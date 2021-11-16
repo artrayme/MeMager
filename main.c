@@ -20,6 +20,12 @@ int block_size;
 int blocks_count;
 int memory_size;
 
+void copy_ptr(ptr* source, ptr* dist){
+  dist->block = source->block;
+  dist->block->header = source->block->header;
+  dist->error = source->error;
+}
+
 int init_memory(int _block_size, int _blocks_count) {
   if (_block_size < 1 || _blocks_count < 1) return -1;
   memory_size = _block_size * _blocks_count;
@@ -51,7 +57,8 @@ ptr alloc(int size) {
     return size_error;
   } else if (size <= calc_real_available_memory()) {
     int allocated_memory = 0;
-    ptr* started_value = &current_block_ptr;
+    ptr started_value;
+    copy_ptr(&current_block_ptr, &started_value);
     while (size > allocated_memory) {
       allocated_memory += block_size - sizeof(block);
       current_block_ptr.block->header |= IS_EXTENDED;
