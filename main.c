@@ -73,20 +73,20 @@ ptr alloc(int size) {
   return size_error;
 }
 
-int free_ptr(ptr pointer){
-  if (pointer.error!=0){
+int free_ptr(ptr pointer) {
+  if (pointer.error != 0) {
     return pointer.error;
   }
 
   int freed_blocks_count = 0;
-  while (pointer.block->header&IS_EXTENDED){
-    pointer.block->header&=!IS_EXTENDED;
-    pointer.block->header&=IS_BLOCK_FREE;
+  while (pointer.block->header & IS_EXTENDED) {
+    pointer.block->header &= !IS_EXTENDED;
+    pointer.block->header &= IS_BLOCK_FREE;
     freed_blocks_count++;
   }
 
-  if (pointer.block == current_block_ptr.block){
-    current_block_ptr.block-=freed_blocks_count*block_size;
+  if (pointer.block == current_block_ptr.block) {
+    current_block_ptr.block -= freed_blocks_count * block_size;
   }
 
   return 0;
@@ -126,11 +126,18 @@ void print_block_info(char *name, ptr block_pointer) {
 int main() {
 
   init_memory(32, 10);
-  printer_block_info("after init", current_block_ptr);
-  ptr x = alloc(3);
-  printer_block_info("allocated pointer", x);
-  printer_block_info("current pointer", current_block_ptr);
-
+  print_block_info("current after init", current_block_ptr);
+  ptr x = alloc(100);
+  ptr y = alloc(100);
+  ptr z = alloc(100);
+  ptr a = alloc(1);
+  ptr b = alloc(1);
+  print_block_info("x allocated pointer", x);
+  print_block_info("y allocated pointer", y);
+  print_block_info("z allocated pointer", z);
+  print_block_info("a allocated pointer", a);
+  print_block_info("b allocated pointer", b);
+  print_block_info("current pointer", current_block_ptr);
 
   free_ptr(x);
 
