@@ -53,6 +53,7 @@ int calc_real_available_memory() {
 ptr alloc(int size) {
   if (size < 1) {
     ptr size_error;
+    size_error.block = 0;
     size_error.error = 1;
     return size_error;
   } else if (size <= calc_real_available_memory()) {
@@ -65,10 +66,11 @@ ptr alloc(int size) {
       current_block_ptr.block->header |= !IS_BLOCK_FREE;
       current_block_ptr.block += block_size;
     }
-    (current_block_ptr.block-block_size)->header ^= IS_EXTENDED;
+    (current_block_ptr.block - block_size)->header ^= IS_EXTENDED;
     return started_value;
   }
   ptr size_error;
+  size_error.block = 0;
   size_error.error = 1;
   return size_error;
 }
