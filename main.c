@@ -63,7 +63,7 @@ ptr alloc(int size) {
     while (size > allocated_memory) {
       allocated_memory += block_size - sizeof(block);
       current_block_ptr.block->header |= IS_EXTENDED;
-      current_block_ptr.block->header |= !IS_BLOCK_FREE;
+      current_block_ptr.block->header ^= IS_BLOCK_FREE;
       current_block_ptr.block += block_size;
     }
     (current_block_ptr.block - block_size)->header ^= IS_EXTENDED;
