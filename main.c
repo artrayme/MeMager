@@ -98,31 +98,34 @@ void print_block_info(char *name, ptr block_pointer) {
   printf("---------- %s ---------\n", name);
 
   printf("real_address = %ul\n", block_pointer.block);
+  if (block_pointer.error != 0) {
+    printf("error = %d\n", block_pointer.error);
+  } else {
+    printf("flags: \n");
+    printf("\tis_free =     %d\n", (block_pointer.block->header & IS_BLOCK_FREE) > 0);
+    printf("\tis_extended = %d\n", (block_pointer.block->header & IS_EXTENDED) > 0);
+    printf("\tis_readable = %d\n", (block_pointer.block->header & IS_READABLE) > 0);
+    printf("\tis_writable = %d\n", (block_pointer.block->header & IS_WRITABLE) > 0);
 
-  printf("flags: \n");
-  printf("\tis_free =     %d\n", (block_pointer.block->header & IS_BLOCK_FREE) > 0);
-  printf("\tis_extended = %d\n", (block_pointer.block->header & IS_EXTENDED) > 0);
-  printf("\tis_readable = %d\n", (block_pointer.block->header & IS_READABLE) > 0);
-  printf("\tis_writable = %d\n", (block_pointer.block->header & IS_WRITABLE) > 0);
+    if (block_pointer.block->header & IS_EXTENDED) {
+      int nested_blocks_count = 0;
+      ptr cur_block = block_pointer;
+      while ((cur_block.block->header & IS_EXTENDED) && nested_blocks_count < blocks_count) {
+        nested_blocks_count++;
+        cur_block.block += block_size;
+      }
+      printf("nested_blocks_count = %d: \n", nested_blocks_count);
 
-  if (block_pointer.block->header & IS_EXTENDED) {
-    int nested_blocks_count = 0;
-    ptr cur_block = block_pointer;
-    while ((cur_block.block->header&IS_EXTENDED) && nested_blocks_count<blocks_count){
-      nested_blocks_count++;
-      cur_block.block+=block_size;
+      printf("last_block_in_nested: \n");
+      printf("\treal_address = %ul\n", cur_block.block);
+      printf("\tflags: \n");
+      printf("\t\tis_free =     %d\n", (cur_block.block->header & IS_BLOCK_FREE) > 0);
+      printf("\t\tis_extended = %d\n", (cur_block.block->header & IS_EXTENDED) > 0);
+      printf("\t\tis_readable = %d\n", (cur_block.block->header & IS_READABLE) > 0);
+      printf("\t\tis_writable = %d\n", (cur_block.block->header & IS_WRITABLE) > 0);
     }
-    printf("nested_blocks_count = %d: \n", nested_blocks_count);
-
-    printf("last_block_in_nested: \n");
-    printf("\treal_address = %ul\n", cur_block.block);
-    printf("\tflags: \n");
-    printf("\t\tis_free =     %d\n", (cur_block.block->header & IS_BLOCK_FREE) > 0);
-    printf("\t\tis_extended = %d\n", (cur_block.block->header & IS_EXTENDED) > 0);
-    printf("\t\tis_readable = %d\n", (cur_block.block->header & IS_READABLE) > 0);
-    printf("\t\tis_writable = %d\n", (cur_block.block->header & IS_WRITABLE) > 0);
+    printf("---------------------------------\n");
   }
-  printf("---------------------------------\n");
 }
 
 int main() {
