@@ -2,8 +2,8 @@
 // Created by artrayme on 11/17/21.
 //
 
-#include "memager.h"
 #include "memager_tester.h"
+#include "memager.h"
 #include <stdio.h>
 
 void print_block_info(char *name, ptr block_pointer) {
@@ -31,15 +31,15 @@ void test_memory_init() {
       int res = init_memory(i, j);
       if (i < 1 || j < 1) {
         if (res == ILLEGAL_MEMORY_INIT_ARGUMENTS) {
-          printf("PASSED test number %d\n", test_number);
+          printf("PASSED init test number %d\n", test_number);
         } else {
-          printf("FAILED test number %d: i = %d, j = %d, res = %d\n", test_number, i, j, res);
+          printf("FAILED init test number %d: i = %d, j = %d, res = %d\n", test_number, i, j, res);
         }
       } else {
         if (res == i * j) {
-          printf("PASSED test number %d\n", test_number);
+          printf("PASSED init test number %d\n", test_number);
         } else {
-          printf("FAILED test number %d: i = %d, j = %d, res = %d\n", test_number, i, j, res);
+          printf("FAILED init test number %d: i = %d, j = %d, res = %d\n", test_number, i, j, res);
         }
       }
     }
@@ -91,30 +91,61 @@ void test_one_free(int test_number, ptr pointer, int expected_error, int assert_
 }
 
 void test_memory_free() {
-//  init_memory(64, 10);
-//  ptr ptr1 = alloc_ptr(1);
-//  free_ptr(&ptr1);
-//  test_one_free(1, ptr1, NULL_POINTER, current_block_ptr.block == main_ptr.block);
-//
-//  ptr ptr2 = alloc_ptr(64);
-//  free_ptr(&ptr2);
-//  test_one_free(2, ptr2, NULL_POINTER, current_block_ptr.block == main_ptr.block);
-//
-//  ptr ptr3 = alloc_ptr(300);
-//  free_ptr(&ptr3);
-//  test_one_free(3, ptr3, NULL_POINTER, current_block_ptr.block == main_ptr.block);
-//
-//  ptr ptr11 = alloc_ptr(1);
-//  ptr ptr12 = alloc_ptr(1);
-//  ptr ptr13 = alloc_ptr(1);
-//  free_ptr(&ptr11);
-//  test_one_free(4, ptr11, NULL_POINTER, current_block_ptr.block != main_ptr.block);
+  init_memory(64, 10);
+  ptr ptr1 = alloc_ptr(1);
+  free_ptr(&ptr1);
+  test_one_free(1, ptr1, NULL_POINTER, get_memory_start_ptr().block == get_memory_current_ptr().block);
 
-//  free_ptr(&ptr12);
-//  test_one_free(5, ptr11, NULL_POINTER, current_block_ptr.block != main_ptr.block);
+  ptr ptr2 = alloc_ptr(64);
+  free_ptr(&ptr2);
+  test_one_free(2, ptr2, NULL_POINTER, get_memory_current_ptr().block == get_memory_start_ptr().block);
 
-//  ptr back_ptr13;
-//  copy_ptr(&ptr13, &back_ptr13);
-//  free_ptr(&ptr13);
-//  test_one_free(6, ptr13, NULL_POINTER, current_block_ptr.block == back_ptr13.block);
+  ptr ptr3 = alloc_ptr(300);
+  free_ptr(&ptr3);
+  test_one_free(3, ptr3, NULL_POINTER, get_memory_current_ptr().block == get_memory_start_ptr().block);
+
+  ptr ptr11 = alloc_ptr(1);
+  ptr ptr12 = alloc_ptr(1);
+  ptr ptr13 = alloc_ptr(1);
+  free_ptr(&ptr11);
+  test_one_free(4, ptr11, NULL_POINTER, get_memory_current_ptr().block != get_memory_start_ptr().block);
+
+  free_ptr(&ptr12);
+  test_one_free(5, ptr11, NULL_POINTER, get_memory_current_ptr().block != get_memory_start_ptr().block);
+
+  ptr back_ptr13;
+  copy_ptr(&ptr13, &back_ptr13);
+  free_ptr(&ptr13);
+  test_one_free(6, ptr13, NULL_POINTER, get_memory_current_ptr().block == back_ptr13.block);
+}
+
+void test_memory_read_and_write() {
+  init_memory(10, 10);
+  ptr ptr1 = alloc_ptr(1);
+  int to_write_value = 123;
+  write(ptr1, &to_write_value, sizeof(to_write_value));
+  int result_value = 0;
+  read(ptr1, &result_value, sizeof(result_value));
+  if (to_write_value == result_value) {
+    printf("PASSED read/write test number %d\n", 1);
+  } else {
+    printf("FAILED read/write test number %d\n", 1);
+  }
+
+  typedef struct test {
+    long a;
+    size_t b;
+    char c;
+  } test_struct;
+  ptr ptr2 = alloc_ptr(sizeof (test_struct));
+  test_struct to_write_struct = {.a = 123, .b = 456, .c = 9};
+  write(ptr2, &to_write_struct, sizeof(to_write_struct));
+  test_struct read_struct;
+  read(ptr2, &read_struct, sizeof(read_struct));
+  if (read_struct.a == to_write_struct.a && read_struct.b == to_write_struct.b && read_struct.c == to_write_struct.c) {
+    printf("PASSED read/write test number %d\n", 2);
+  } else {
+    printf("FAILED read/write test number %d\n", 2);
+    printf("a = %ld, b = %zu, c = %d\n", read_struct.a, read_struct.b, read_struct.c);
+  }
 }

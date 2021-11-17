@@ -26,7 +26,6 @@
 
 typedef struct memory_block {
   unsigned char header;
-  void *data;
 } block_struct;
 
 typedef struct block_ptr {
@@ -46,4 +45,6 @@ int write(ptr pointer, void *buffer, int size);
 
 void copy_ptr(ptr *source, ptr *dist);
 
+ptr get_memory_start_ptr();
 
+ptr get_memory_current_ptr();

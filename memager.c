@@ -5,16 +5,6 @@
 #include "memager.h"
 #include <malloc.h>
 
-//typedef struct memory_block {
-//  unsigned char header;
-//  void *data;
-//} block_struct;
-//
-//typedef struct block_ptr {
-//  block_struct *block;
-//  int error;
-//} ptr;
-
 ptr main_ptr;
 ptr current_block_ptr;
 int block_size;
@@ -116,7 +106,11 @@ int read(ptr pointer, void *buffer, int size) {
   if (get_extended_blocks_count(pointer) > size) {
     return TRY_TO_READ_MORE_BYTES_THEN_AVAILABLE;
   }
-  buffer = pointer.block->data;
+  char *void_ptr = (char *) pointer.block;
+  char *buf = (char *) buffer;
+  for (int i = 0; i < size; ++i) {
+    buf[i] = void_ptr[1 + i];
+  }
   return SUCCESS;
 }
 
@@ -124,10 +118,20 @@ int write(ptr pointer, void *buffer, int size) {
   if (pointer.error != SUCCESS) {
     return TRY_TO_WRITE_NULL_POINTER;
   }
-  if (get_extended_blocks_count(pointer) > size) {
+  if ((get_extended_blocks_count(pointer)+1)*block_size < size) {
     return TRY_TO_WRITE_MORE_BYTES_THEN_AVAILABLE;
   }
-  pointer.block->data = buffer;
-
+  char *void_ptr = (char *) pointer.block;
+  char *buf = (char *) buffer;
+  for (int i = 0; i < size; ++i) {
+    void_ptr[1 + i] = buf[i];
+  }
   return SUCCESS;
+}
+ptr get_memory_start_ptr() {
+  return main_ptr;
+}
+
+ptr get_memory_current_ptr() {
+  return current_block_ptr;
 }
