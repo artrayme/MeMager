@@ -4,6 +4,14 @@
 #define IS_EXTENDED 0x2
 #define IS_READABLE 0x4
 #define IS_WRITABLE 0x8
+#define DEFAULT_BLOCK_STATE IS_BLOCK_FREE + IS_READABLE + IS_WRITABLE
+
+#define SUCCESS 0
+#define ILLEGAL_MEMORY_INIT_ARGUMENTS -1
+#define TRY_TO_ALLOCATE_LESS_THAN_ONE_BYTE -1
+#define TRY_TO_ALLOCATE_MORE_BYTES_THAN_AVAILABLE -2
+#define TRY_TO_FREE_ERROR_POINTER -1
+#define NULL_POINTER 1
 
 typedef struct memory_block {
   char header;
@@ -27,7 +35,10 @@ void copy_ptr(ptr *source, ptr *dist) {
 }
 
 int init_memory(int _block_size, int _blocks_count) {
-  if (_block_size < 1 || _blocks_count < 1) return -1;
+  if (_block_size < 1 || _blocks_count < 1) return ILLEGAL_MEMORY_INIT_ARGUMENTS;
+  if (memory_size > 0) {
+    free(main_ptr.block);
+  }
   memory_size = _block_size * _blocks_count;
   blocks_count = _blocks_count;
   block_size = _block_size;
@@ -36,11 +47,11 @@ int init_memory(int _block_size, int _blocks_count) {
   ptr max_address = main_ptr;
   max_address.block += memory_size;
   for (ptr allocation_pointer = main_ptr; allocation_pointer.block < max_address.block; allocation_pointer.block += _block_size) {
-    allocation_pointer.block->header = 0;
-    allocation_pointer.block->header |= IS_BLOCK_FREE;
-    allocation_pointer.block->header |= !IS_EXTENDED;
-    allocation_pointer.block->header |= IS_READABLE;
-    allocation_pointer.block->header |= IS_WRITABLE;
+    allocation_pointer.block->header = DEFAULT_BLOCK_STATE;
+    //    allocation_pointer.block->header |= IS_BLOCK_FREE;
+    //    allocation_pointer.block->header |= !IS_EXTENDED;
+    //    allocation_pointer.block->header |= IS_READABLE;
+    //    allocation_pointer.block->header |= IS_WRITABLE;
   }
   current_block_ptr = main_ptr;
   return memory_size;
@@ -54,7 +65,7 @@ ptr alloc(int size) {
   if (size < 1) {
     ptr size_error;
     size_error.block = 0;
-    size_error.error = 1;
+    size_error.error = TRY_TO_ALLOCATE_LESS_THAN_ONE_BYTE;
     return size_error;
   } else if (size <= calc_real_available_memory()) {
     int allocated_memory = 0;
@@ -71,7 +82,7 @@ ptr alloc(int size) {
   }
   ptr size_error;
   size_error.block = 0;
-  size_error.error = 1;
+  size_error.error = TRY_TO_ALLOCATE_MORE_BYTES_THAN_AVAILABLE;
   return size_error;
 }
 
