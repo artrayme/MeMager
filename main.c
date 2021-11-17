@@ -86,26 +86,29 @@ ptr alloc(int size) {
   return size_error;
 }
 
-int free_ptr(ptr pointer) {
-  if (pointer.error != 0) {
-    return pointer.error;
+void print_block_info(char *name, ptr block_pointer);
+
+int free_ptr(ptr *pointer) {
+  if (pointer->error != SUCCESS) {
+    return TRY_TO_FREE_ERROR_POINTER;
   }
 
   int freed_blocks_count = 0;
-  while (pointer.block->header & IS_EXTENDED) {
-    pointer.block->header &= !IS_EXTENDED;
-    pointer.block->header &= IS_BLOCK_FREE;
-    freed_blocks_count++;
+  while (pointer->block->header & IS_EXTENDED) {
+    pointer->block->header = DEFAULT_BLOCK_STATE;
+    pointer->block += block_size;
   }
+  pointer->block->header = DEFAULT_BLOCK_STATE;
 
-  if (pointer.block == current_block_ptr.block) {
+  if (pointer->block + block_size == current_block_ptr.block) {
     current_block_ptr.block -= freed_blocks_count * block_size;
-    while ((current_block_ptr.block - block_size)->header & IS_BLOCK_FREE && current_block_ptr.block!=main_ptr.block) {
+    while ((current_block_ptr.block - block_size)->header & IS_BLOCK_FREE && current_block_ptr.block != main_ptr.block) {
       current_block_ptr.block -= block_size;
     }
   }
+  pointer->error = NULL_POINTER;
 
-  return 0;
+  return SUCCESS;
 }
 
 void print_block_info(char *name, ptr block_pointer) {
