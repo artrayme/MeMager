@@ -13,13 +13,17 @@
 #define TRY_TO_FREE_ERROR_POINTER -1
 #define NULL_POINTER 1
 #define TRY_TO_WRITE_MORE_BYTES_THEN_AVAILABLE -1
+#define TRY_TO_WRITE_NULL_POINTER -2
+#define TRY_TO_READ_MORE_BYTES_THEN_AVAILABLE -1
+#define TRY_TO_READ_NULL_POINTER -2
 
 typedef struct memory_block {
   unsigned char header;
-} block_header;
+  void *data;
+} block_struct;
 
 typedef struct block_ptr {
-  block_header *block;
+  block_struct *block;
   int error;
 } ptr;
 
@@ -49,10 +53,6 @@ int init_memory(int _block_size, int _blocks_count) {
   max_address.block += memory_size;
   for (ptr allocation_pointer = main_ptr; allocation_pointer.block < max_address.block; allocation_pointer.block += _block_size) {
     allocation_pointer.block->header = DEFAULT_BLOCK_STATE;
-    //    allocation_pointer.block_header->header |= IS_BLOCK_FREE;
-    //    allocation_pointer.block_header->header |= !IS_EXTENDED;
-    //    allocation_pointer.block_header->header |= IS_READABLE;
-    //    allocation_pointer.block_header->header |= IS_WRITABLE;
   }
   current_block_ptr = main_ptr;
   return memory_size;
@@ -68,7 +68,7 @@ void set_extended_blocks_count(ptr pointer, int count) {
 }
 
 int calc_real_available_memory() {
-  return main_ptr.block + memory_size - current_block_ptr.block - (main_ptr.block + memory_size - current_block_ptr.block) / block_size * sizeof(block_header);
+  return main_ptr.block + memory_size - current_block_ptr.block - (main_ptr.block + memory_size - current_block_ptr.block) / block_size * sizeof(block_struct);
 }
 
 ptr alloc(int size) {
@@ -82,10 +82,10 @@ ptr alloc(int size) {
     ptr started_value;
     copy_ptr(&current_block_ptr, &started_value);
     int extended_blocks_count = 0;
-    allocated_memory += block_size - sizeof(block_header);
+    allocated_memory += block_size - sizeof(block_struct);
     current_block_ptr.block += block_size;
     while (size > allocated_memory) {
-      allocated_memory += block_size - sizeof(block_header);
+      allocated_memory += block_size - sizeof(block_struct);
       current_block_ptr.block->header = 0;
       current_block_ptr.block += block_size;
       extended_blocks_count++;
@@ -103,8 +103,6 @@ ptr alloc(int size) {
   return size_error;
 }
 
-void print_block_info(char *name, ptr block_pointer);
-
 int free_ptr(ptr *pointer) {
   if (pointer->error != SUCCESS) {
     return TRY_TO_FREE_ERROR_POINTER;
@@ -119,6 +117,29 @@ int free_ptr(ptr *pointer) {
     pointer->block->header ^= IS_BLOCK_FREE;
   }
   pointer->error = NULL_POINTER;
+
+  return SUCCESS;
+}
+
+int read(ptr pointer, void *buffer, int size) {
+  if (pointer.error != SUCCESS) {
+    return TRY_TO_READ_NULL_POINTER;
+  }
+  if (get_extended_blocks_count(pointer) > size) {
+    return TRY_TO_READ_MORE_BYTES_THEN_AVAILABLE;
+  }
+  buffer = pointer.block->data;
+  return SUCCESS;
+}
+
+int write(ptr pointer, void *buffer, int size) {
+  if (pointer.error != SUCCESS) {
+    return TRY_TO_WRITE_NULL_POINTER;
+  }
+  if (get_extended_blocks_count(pointer) > size) {
+    return TRY_TO_WRITE_MORE_BYTES_THEN_AVAILABLE;
+  }
+  pointer.block->data = buffer;
 
   return SUCCESS;
 }
