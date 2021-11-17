@@ -12,13 +12,14 @@
 #define TRY_TO_ALLOCATE_MORE_BYTES_THAN_AVAILABLE -2
 #define TRY_TO_FREE_ERROR_POINTER -1
 #define NULL_POINTER 1
+#define TRY_TO_WRITE_MORE_BYTES_THEN_AVAILABLE -1
 
 typedef struct memory_block {
-  char header;
-} block;
+  unsigned char header;
+} block_header;
 
 typedef struct block_ptr {
-  block *block;
+  block_header *block;
   int error;
 } ptr;
 
@@ -48,17 +49,26 @@ int init_memory(int _block_size, int _blocks_count) {
   max_address.block += memory_size;
   for (ptr allocation_pointer = main_ptr; allocation_pointer.block < max_address.block; allocation_pointer.block += _block_size) {
     allocation_pointer.block->header = DEFAULT_BLOCK_STATE;
-    //    allocation_pointer.block->header |= IS_BLOCK_FREE;
-    //    allocation_pointer.block->header |= !IS_EXTENDED;
-    //    allocation_pointer.block->header |= IS_READABLE;
-    //    allocation_pointer.block->header |= IS_WRITABLE;
+    //    allocation_pointer.block_header->header |= IS_BLOCK_FREE;
+    //    allocation_pointer.block_header->header |= !IS_EXTENDED;
+    //    allocation_pointer.block_header->header |= IS_READABLE;
+    //    allocation_pointer.block_header->header |= IS_WRITABLE;
   }
   current_block_ptr = main_ptr;
   return memory_size;
 }
 
+int get_extended_blocks_count(ptr pointer) {
+  return pointer.block->header >> 4;
+}
+void set_extended_blocks_count(ptr pointer, int count) {
+  char result_header = pointer.block->header & 0b00001111;
+  result_header |= (count << 4);
+  pointer.block->header = result_header;
+}
+
 int calc_real_available_memory() {
-  return main_ptr.block + memory_size - current_block_ptr.block - (main_ptr.block + memory_size - current_block_ptr.block) / block_size * sizeof(block);
+  return main_ptr.block + memory_size - current_block_ptr.block - (main_ptr.block + memory_size - current_block_ptr.block) / block_size * sizeof(block_header);
 }
 
 ptr alloc(int size) {
@@ -71,13 +81,20 @@ ptr alloc(int size) {
     int allocated_memory = 0;
     ptr started_value;
     copy_ptr(&current_block_ptr, &started_value);
+    int extended_blocks_count = 0;
+    allocated_memory += block_size - sizeof(block_header);
+    current_block_ptr.block += block_size;
     while (size > allocated_memory) {
-      allocated_memory += block_size - sizeof(block);
-      current_block_ptr.block->header |= IS_EXTENDED;
-      current_block_ptr.block->header ^= IS_BLOCK_FREE;
+      allocated_memory += block_size - sizeof(block_header);
+      current_block_ptr.block->header = 0;
       current_block_ptr.block += block_size;
+      extended_blocks_count++;
     }
-    (current_block_ptr.block - block_size)->header ^= IS_EXTENDED;
+    started_value.block->header ^= IS_BLOCK_FREE;
+    if (extended_blocks_count > 0) {
+      set_extended_blocks_count(started_value, extended_blocks_count);
+      started_value.block->header |= IS_EXTENDED;
+    }
     return started_value;
   }
   ptr size_error;
@@ -93,18 +110,13 @@ int free_ptr(ptr *pointer) {
     return TRY_TO_FREE_ERROR_POINTER;
   }
 
-  int freed_blocks_count = 0;
-  while (pointer->block->header & IS_EXTENDED) {
-    pointer->block->header = DEFAULT_BLOCK_STATE;
-    pointer->block += block_size;
-  }
-  pointer->block->header = DEFAULT_BLOCK_STATE;
-
-  if (pointer->block + block_size == current_block_ptr.block) {
-    current_block_ptr.block -= freed_blocks_count * block_size;
-    while ((current_block_ptr.block - block_size)->header & IS_BLOCK_FREE && current_block_ptr.block != main_ptr.block) {
-      current_block_ptr.block -= block_size;
-    }
+  if ((pointer->block + ((pointer->block->header >> 4) + 1) * block_size) == current_block_ptr.block) {
+    current_block_ptr.block = pointer->block;
+    set_extended_blocks_count(current_block_ptr, 0);
+    current_block_ptr.block->header ^= !IS_EXTENDED;
+    current_block_ptr.block->header ^= IS_BLOCK_FREE;
+  } else {
+    pointer->block->header ^= IS_BLOCK_FREE;
   }
   pointer->error = NULL_POINTER;
 
@@ -119,28 +131,11 @@ void print_block_info(char *name, ptr block_pointer) {
     printf("error = %d\n", block_pointer.error);
   } else {
     printf("flags: \n");
-    printf("\tis_free =     %d\n", (block_pointer.block->header & IS_BLOCK_FREE) > 0);
-    printf("\tis_extended = %d\n", (block_pointer.block->header & IS_EXTENDED) > 0);
-    printf("\tis_readable = %d\n", (block_pointer.block->header & IS_READABLE) > 0);
-    printf("\tis_writable = %d\n", (block_pointer.block->header & IS_WRITABLE) > 0);
-
-    if (block_pointer.block->header & IS_EXTENDED) {
-      int nested_blocks_count = 0;
-      ptr cur_block = block_pointer;
-      while ((cur_block.block->header & IS_EXTENDED) && nested_blocks_count < blocks_count) {
-        nested_blocks_count++;
-        cur_block.block += block_size;
-      }
-      printf("nested_blocks_count = %d: \n", nested_blocks_count);
-
-      printf("last_block_in_nested: \n");
-      printf("\treal_address = %ul\n", cur_block.block);
-      printf("\tflags: \n");
-      printf("\t\tis_free =     %d\n", (cur_block.block->header & IS_BLOCK_FREE) > 0);
-      printf("\t\tis_extended = %d\n", (cur_block.block->header & IS_EXTENDED) > 0);
-      printf("\t\tis_readable = %d\n", (cur_block.block->header & IS_READABLE) > 0);
-      printf("\t\tis_writable = %d\n", (cur_block.block->header & IS_WRITABLE) > 0);
-    }
+    printf("\textended_count = %d\n", (block_pointer.block->header >> 4));
+    printf("\tis_free =        %d\n", (block_pointer.block->header & IS_BLOCK_FREE) > 0);
+    printf("\tis_extended =    %d\n", (block_pointer.block->header & IS_EXTENDED) > 0);
+    printf("\tis_readable =    %d\n", (block_pointer.block->header & IS_READABLE) > 0);
+    printf("\tis_writable =    %d\n", (block_pointer.block->header & IS_WRITABLE) > 0);
     printf("---------------------------------\n");
   }
 }
@@ -187,13 +182,13 @@ void test_one_alloc(int test_number, ptr *pointer, int expected_error, char expe
 void test_memory_alloc() {
   init_memory(64, 10);
   ptr ptr1 = alloc(1);
-
   test_one_alloc(1, &ptr1, 0, IS_READABLE + IS_WRITABLE);
+
   ptr ptr2 = alloc(63);
   test_one_alloc(2, &ptr2, 0, IS_READABLE + IS_WRITABLE);
 
   ptr ptr3 = alloc(64);
-  test_one_alloc(3, &ptr3, 0, IS_READABLE + IS_WRITABLE + IS_EXTENDED);
+  test_one_alloc(3, &ptr3, 0, 0b00010000 + IS_READABLE + IS_WRITABLE + IS_EXTENDED);
 
   ptr ptr4 = alloc(-1);
   test_one_alloc(4, &ptr4, TRY_TO_ALLOCATE_LESS_THAN_ONE_BYTE, -1);
@@ -222,7 +217,6 @@ void test_memory_free() {
 
   ptr ptr3 = alloc(300);
   free_ptr(&ptr3);
-
   test_one_free(3, ptr3, NULL_POINTER, current_block_ptr.block == main_ptr.block);
 
   ptr ptr11 = alloc(1);
@@ -234,13 +228,15 @@ void test_memory_free() {
   free_ptr(&ptr12);
   test_one_free(5, ptr11, NULL_POINTER, current_block_ptr.block != main_ptr.block);
 
+  ptr back_ptr13;
+  copy_ptr(&ptr13, &back_ptr13);
   free_ptr(&ptr13);
-  test_one_free(6, ptr13, NULL_POINTER, current_block_ptr.block == main_ptr.block);
+  test_one_free(6, ptr13, NULL_POINTER, current_block_ptr.block == back_ptr13.block);
 }
 
 int main() {
   //  test_memory_init();
-  //  test_memory_alloc();
+  test_memory_alloc();
   test_memory_free();
   return 0;
 }
