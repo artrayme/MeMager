@@ -23,6 +23,9 @@
 #define TRY_TO_WRITE_NULL_POINTER -2
 #define TRY_TO_READ_MORE_BYTES_THEN_AVAILABLE -1
 #define TRY_TO_READ_NULL_POINTER -2
+#define TRY_TO_REWRITE_ERROR_POINTER -1
+#define TRY_TO_REWRITE_BIGGER_POINTER_THEN_SOURCE -2
+
 
 typedef struct memory_block {
   unsigned char header;
@@ -43,7 +46,9 @@ int read(ptr pointer, void *buffer, int size);
 
 int write(ptr pointer, void *buffer, int size);
 
-void copy_ptr(ptr *source, ptr *dist);
+void copy_ptr(ptr *source, ptr *dest);
+
+int move_ptr(ptr *source_ptr, ptr *dest_ptr);
 
 ptr get_memory_start_ptr();
 

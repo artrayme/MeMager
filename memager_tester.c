@@ -137,7 +137,7 @@ void test_memory_read_and_write() {
     size_t b;
     char c;
   } test_struct;
-  ptr ptr2 = alloc_ptr(sizeof (test_struct));
+  ptr ptr2 = alloc_ptr(sizeof(test_struct));
   test_struct to_write_struct = {.a = 123, .b = 456, .c = 9};
   write(ptr2, &to_write_struct, sizeof(to_write_struct));
   test_struct read_struct;

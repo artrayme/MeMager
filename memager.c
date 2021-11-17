@@ -11,10 +11,10 @@ int block_size;
 int blocks_count;
 int memory_size;
 
-void copy_ptr(ptr *source, ptr *dist) {
-  dist->block = source->block;
-  dist->block->header = source->block->header;
-  dist->error = source->error;
+void copy_ptr(ptr *source, ptr *dest) {
+  dest->block = source->block;
+  dest->block->header = source->block->header;
+  dest->error = source->error;
 }
 
 int init_memory(int _block_size, int _blocks_count) {
@@ -128,6 +128,26 @@ int write(ptr pointer, void *buffer, int size) {
   }
   return SUCCESS;
 }
+
+int move_ptr(ptr *source_ptr, ptr *dest_ptr){
+  if (source_ptr->error!=SUCCESS){
+    return TRY_TO_REWRITE_ERROR_POINTER;
+  }
+  if (get_extended_blocks_count(*source_ptr) > get_extended_blocks_count(*dest_ptr)){
+    return TRY_TO_REWRITE_BIGGER_POINTER_THEN_SOURCE;
+  }
+
+  int blocks_to_copy_count = get_extended_blocks_count(*source_ptr)+1;
+  for (int i = 1; i < blocks_to_copy_count; ++i) {
+    dest_ptr->block[i] = source_ptr->block[i];
+  }
+  source_ptr->block=0;
+  source_ptr->error = NULL_POINTER;
+
+  return SUCCESS;
+}
+
+
 ptr get_memory_start_ptr() {
   return main_ptr;
 }
