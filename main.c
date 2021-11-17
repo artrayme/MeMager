@@ -145,29 +145,102 @@ void print_block_info(char *name, ptr block_pointer) {
   }
 }
 
+void test_memory_init() {
+  for (int i = -1; i < 100; ++i) {
+    for (int j = -1; j < 100; ++j) {
+      int res = init_memory(i, j);
+      if (i < 1 || j < 1) {
+        if (res == ILLEGAL_MEMORY_INIT_ARGUMENTS) {
+          printf("PASSED\n");
+        } else {
+          printf("FAILED: i = %d, j = %d, res = %d\n", i, j, res);
+        }
+      } else {
+        if (res == i * j) {
+          printf("PASSED\n");
+        } else {
+          printf("FAILED: i = %d, j = %d, res = %d\n", i, j, res);
+        }
+      }
+    }
+  }
+}
+
+void test_one_alloc(int test_number, ptr *pointer, int expected_error, char expected_flags) {
+  if (expected_error == SUCCESS) {
+    if (pointer->block->header == expected_flags) {
+      printf("PASSED alloc test number %d\n", test_number);
+    } else {
+      printf("FAILED alloc test number %d\n", test_number);
+      print_block_info("", *pointer);
+    }
+  } else {
+    if (pointer->error == expected_error) {
+      printf("PASSED alloc test number %d\n", test_number);
+    } else {
+      printf("FAILED alloc test number %d\n", test_number);
+      print_block_info("", *pointer);
+    }
+  }
+}
+
+void test_memory_alloc() {
+  init_memory(64, 10);
+  ptr ptr1 = alloc(1);
+
+  test_one_alloc(1, &ptr1, 0, IS_READABLE + IS_WRITABLE);
+  ptr ptr2 = alloc(63);
+  test_one_alloc(2, &ptr2, 0, IS_READABLE + IS_WRITABLE);
+
+  ptr ptr3 = alloc(64);
+  test_one_alloc(3, &ptr3, 0, IS_READABLE + IS_WRITABLE + IS_EXTENDED);
+
+  ptr ptr4 = alloc(-1);
+  test_one_alloc(4, &ptr4, TRY_TO_ALLOCATE_LESS_THAN_ONE_BYTE, -1);
+
+  ptr ptr5 = alloc(10 * 64);
+  test_one_alloc(5, &ptr5, TRY_TO_ALLOCATE_MORE_BYTES_THAN_AVAILABLE, -1);
+}
+
+void test_one_free(int test_number, ptr pointer, int expected_error, int assert_true) {
+  if (pointer.error == NULL_POINTER && assert_true) {
+    printf("PASSED free test number %d\n", test_number);
+  } else {
+    printf("FAILED free test number %d\n", test_number);
+  }
+}
+
+void test_memory_free() {
+  init_memory(64, 10);
+  ptr ptr1 = alloc(1);
+  free_ptr(&ptr1);
+  test_one_free(1, ptr1, NULL_POINTER, current_block_ptr.block == main_ptr.block);
+
+  ptr ptr2 = alloc(64);
+  free_ptr(&ptr2);
+  test_one_free(2, ptr2, NULL_POINTER, current_block_ptr.block == main_ptr.block);
+
+  ptr ptr3 = alloc(300);
+  free_ptr(&ptr3);
+
+  test_one_free(3, ptr3, NULL_POINTER, current_block_ptr.block == main_ptr.block);
+
+  ptr ptr11 = alloc(1);
+  ptr ptr12 = alloc(1);
+  ptr ptr13 = alloc(1);
+  free_ptr(&ptr11);
+  test_one_free(4, ptr11, NULL_POINTER, current_block_ptr.block != main_ptr.block);
+
+  free_ptr(&ptr12);
+  test_one_free(5, ptr11, NULL_POINTER, current_block_ptr.block != main_ptr.block);
+
+  free_ptr(&ptr13);
+  test_one_free(6, ptr13, NULL_POINTER, current_block_ptr.block == main_ptr.block);
+}
+
 int main() {
-
-  init_memory(32, 10);
-  print_block_info("current after init", current_block_ptr);
-  ptr x = alloc(100);
-  ptr y = alloc(100);
-  ptr z = alloc(100);
-  ptr a = alloc(100);
-  ptr b = alloc(1);
-  ptr c = alloc(1);
-  ptr d = alloc(1);
-  ptr e = alloc(1);
-  print_block_info("x allocated pointer", x);
-  print_block_info("y allocated pointer", y);
-  print_block_info("z allocated pointer", z);
-  print_block_info("a allocated pointer", a);
-  print_block_info("b allocated pointer", b);
-  print_block_info("c allocated pointer", c);
-  print_block_info("d allocated pointer", d);
-  print_block_info("e allocated pointer", e);
-  print_block_info("current pointer", current_block_ptr);
-
-  free_ptr(x);
-
+  //  test_memory_init();
+  //  test_memory_alloc();
+  test_memory_free();
   return 0;
 }
