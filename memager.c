@@ -91,6 +91,17 @@ int free_ptr(ptr *pointer) {
     set_extended_blocks_count(current_block_ptr, 0);
     current_block_ptr.block->header ^= !IS_EXTENDED;
     current_block_ptr.block->header ^= IS_BLOCK_FREE;
+    ptr temp;
+    copy_ptr(&main_ptr, &temp);
+    int blocks_count_to_deleting = 0;
+    while (temp.block!=current_block_ptr.block){
+      if (temp.block->header&IS_BLOCK_FREE){
+        blocks_count_to_deleting+=get_extended_blocks_count(temp);
+      } else{
+        blocks_count_to_deleting=0;
+      }
+      temp.block+= get_extended_blocks_count(temp)*block_size;
+    }
   } else {
     pointer->block->header ^= IS_BLOCK_FREE;
   }
