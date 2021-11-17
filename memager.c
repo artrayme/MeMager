@@ -100,7 +100,7 @@ int free_ptr(ptr *pointer) {
       } else{
         blocks_count_to_deleting=0;
       }
-      temp.block+= get_extended_blocks_count(temp)*block_size;
+      temp.block+= (get_extended_blocks_count(temp)+1)*block_size;
     }
   } else {
     pointer->block->header ^= IS_BLOCK_FREE;
