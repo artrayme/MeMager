@@ -152,8 +152,7 @@ int move_ptr(ptr *source_ptr, ptr *dest_ptr){
   for (int i = 1; i < blocks_to_copy_count; ++i) {
     dest_ptr->block[i] = source_ptr->block[i];
   }
-  source_ptr->block=0;
-  source_ptr->error = NULL_POINTER;
+  free_ptr(source_ptr);
 
   return SUCCESS;
 }

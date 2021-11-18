@@ -11,3 +11,4 @@ void test_memory_init();
 void test_memory_alloc();
 void test_memory_free();
 void test_memory_read_and_write();
+void test_memory_move();

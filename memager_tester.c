@@ -149,3 +149,26 @@ void test_memory_read_and_write() {
     printf("a = %ld, b = %zu, c = %d\n", read_struct.a, read_struct.b, read_struct.c);
   }
 }
+
+void test_memory_move(){
+  init_memory(64, 10);
+  ptr ptr1 = alloc_ptr(65);
+  ptr ptr2 = alloc_ptr(10);
+  int res = move_ptr(&ptr2, &ptr1);
+  if (res == SUCCESS && ptr1.block == get_memory_start_ptr().block && (ptr1.block+2*64) == get_memory_current_ptr().block) {
+    printf("PASSED move test number %d\n", 1);
+  } else {
+    printf("FAILED move test number %d\n", 1);
+  }
+
+  init_memory(64, 10);
+  ptr ptr3 = alloc_ptr(65);
+  ptr ptr4 = alloc_ptr(10);
+  int res2 = move_ptr(&ptr3, &ptr4);
+  if (res2 == TRY_TO_REWRITE_BIGGER_POINTER_THEN_SOURCE) {
+    printf("PASSED move test number %d\n", 2);
+  } else {
+    printf("FAILED move test number %d\n", 2);
+  }
+
+}

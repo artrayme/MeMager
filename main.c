@@ -8,5 +8,6 @@ int main() {
   test_memory_alloc();
   test_memory_free();
   test_memory_read_and_write();
+  test_memory_move();
   return 0;
 }
