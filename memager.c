@@ -86,7 +86,7 @@ int free_ptr(ptr *pointer) {
     return TRY_TO_FREE_ERROR_POINTER;
   }
 
-//  check is this block last
+  //  check is this block last
   if ((pointer->block + ((pointer->block->header >> 4) + 1) * block_size) == current_block_ptr.block) {
     current_block_ptr.block = pointer->block;
     set_extended_blocks_count(current_block_ptr, 0);
@@ -95,16 +95,16 @@ int free_ptr(ptr *pointer) {
     ptr temp;
     copy_ptr(&main_ptr, &temp);
     int blocks_count_to_deleting = 0;
-    while (temp.block!=current_block_ptr.block){
-      unsigned char ext_blocks = get_extended_blocks_count(temp)+1;
-      if (temp.block->header&IS_BLOCK_FREE){
-        blocks_count_to_deleting+= ext_blocks;
-      } else{
-        blocks_count_to_deleting=0;
+    while (temp.block != current_block_ptr.block) {
+      unsigned char ext_blocks = get_extended_blocks_count(temp) + 1;
+      if (temp.block->header & IS_BLOCK_FREE) {
+        blocks_count_to_deleting += ext_blocks;
+      } else {
+        blocks_count_to_deleting = 0;
       }
-      temp.block+= ext_blocks*block_size;
+      temp.block += ext_blocks * block_size;
     }
-    current_block_ptr.block-=blocks_count_to_deleting*block_size;
+    current_block_ptr.block -= blocks_count_to_deleting * block_size;
   } else {
     pointer->block->header ^= IS_BLOCK_FREE;
   }
@@ -132,7 +132,7 @@ int write(ptr pointer, void *buffer, int size) {
   if (pointer.error != SUCCESS) {
     return TRY_TO_WRITE_NULL_POINTER;
   }
-  if ((get_extended_blocks_count(pointer)+1)*block_size < size) {
+  if ((get_extended_blocks_count(pointer) + 1) * block_size < size) {
     return TRY_TO_WRITE_MORE_BYTES_THEN_AVAILABLE;
   }
   char *void_ptr = (char *) pointer.block;
@@ -143,15 +143,15 @@ int write(ptr pointer, void *buffer, int size) {
   return SUCCESS;
 }
 
-int move_ptr(ptr *source_ptr, ptr *dest_ptr){
-  if (source_ptr->error!=SUCCESS){
+int move_ptr(ptr *source_ptr, ptr *dest_ptr) {
+  if (source_ptr->error != SUCCESS) {
     return TRY_TO_REWRITE_ERROR_POINTER;
   }
-  if (get_extended_blocks_count(*source_ptr) > get_extended_blocks_count(*dest_ptr)){
+  if (get_extended_blocks_count(*source_ptr) > get_extended_blocks_count(*dest_ptr)) {
     return TRY_TO_REWRITE_BIGGER_POINTER_THEN_SOURCE;
   }
 
-  int blocks_to_copy_count = get_extended_blocks_count(*source_ptr)+1;
+  int blocks_to_copy_count = get_extended_blocks_count(*source_ptr) + 1;
   for (int i = 1; i < blocks_to_copy_count; ++i) {
     dest_ptr->block[i] = source_ptr->block[i];
   }
@@ -160,11 +160,14 @@ int move_ptr(ptr *source_ptr, ptr *dest_ptr){
   return SUCCESS;
 }
 
-
 ptr get_memory_start_ptr() {
-  return main_ptr;
+  ptr result;
+  copy_ptr(&main_ptr, &result);
+  return result;
 }
 
 ptr get_memory_current_ptr() {
-  return current_block_ptr;
+  ptr result;
+  copy_ptr(&current_block_ptr, &result);
+  return result;
 }

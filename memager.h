@@ -63,6 +63,7 @@ int init_memory(int _block_size, int _blocks_count);
 
 /*
  * Pointer allocation function.
+ *
  * You must pass size of needed memory, but will be allocated memory more,
  * then 'size' argument, because memory allocated by blocks. Also, the block size will
  * include the header size. For example, if you were inited memory with block size =64
@@ -70,24 +71,67 @@ int init_memory(int _block_size, int _blocks_count);
  * This is because 64 bytes of needed memory plus the byte (or bytes) for header are greater than
  * the size of one block (64). So, in this situation the 128 bytes are allocated.
  *
- *
  * @param size - size of needed memory.
  * @return pointer - if memory successfully allocated, pointer error attribute will be SUCCESS.
  * Otherwise, error field will be TRY_TO_ALLOCATE_LESS_THAN_ONE_BYTE or TRY_TO_ALLOCATE_MORE_BYTES_THAN_AVAILABLE codes.
  * */
 ptr alloc_ptr(int size);
 
-
+/*
+ * Pointer freeing function.
+ *
+ * After calling this function, pointer error filed will be NULL_POINTER.
+ *
+ * @param pointer - a pointer to the memory you want to free
+ * @return error code - SUCCESS, TRY_TO_ALLOCATE_LESS_THAN_ONE_BYTE, TRY_TO_ALLOCATE_MORE_BYTES_THAN_AVAILABLE
+ * */
 int free_ptr(ptr *pointer);
 
-int read(ptr pointer, void *buffer, int size);
-
+/*
+ * Data write function.
+ *
+ * Byte-by-byte copy from buffer to memory block.
+ *
+ * @param pointer - a pointer to the memory where you want to write the data.
+ * @param buffer - data
+ * @param size - num of bytes to write
+ * @param - error code - SUCCESS, TRY_TO_WRITE_MORE_BYTES_THEN_AVAILABLE, TRY_TO_WRITE_NULL_POINTER
+ * */
 int write(ptr pointer, void *buffer, int size);
 
+/*
+ * Data read function.
+ *
+ * Byte-by-byte copy from memory block to buffer.
+ *
+ * @param pointer - a pointer to the memory where you want to read the data.
+ * @param buffer - data
+ * @param size - num of bytes to read
+ * @return - error code. SUCCESS, TRY_TO_READ_MORE_BYTES_THEN_AVAILABLE, TRY_TO_READ_NULL_POINTER
+ * */
+int read(ptr pointer, void *buffer, int size);
+
+/*
+ * Utility function for correct pointers coping.
+ *
+ * @param source - source pointer.
+ * @param dest - destination pointer.
+ * */
 void copy_ptr(ptr *source, ptr *dest);
 
+/*
+ * Data move function.
+ *
+ * Copy all bytes from source pointer to dest pointer
+ *
+ * @param source_ptr - source pointer
+ * @param dest_ptr - destination pointer
+ * @return - error code: SUCCESS, TRY_TO_REWRITE_ERROR_POINTER, TRY_TO_REWRITE_BIGGER_POINTER_THEN_SOURCE
+ * */
 int move_ptr(ptr *source_ptr, ptr *dest_ptr);
 
+// Only for testing
 ptr get_memory_start_ptr();
 
+// Only for testing
 ptr get_memory_current_ptr();
