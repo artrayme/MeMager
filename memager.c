@@ -68,6 +68,7 @@ ptr alloc_ptr(int size) {
       current_block_ptr.block += block_size;
       extended_blocks_count++;
     }
+    started_value.block->header = DEFAULT_BLOCK_STATE;
     started_value.block->header ^= IS_BLOCK_FREE;
     if (extended_blocks_count > 0) {
       set_extended_blocks_count(started_value, extended_blocks_count);
