@@ -13,7 +13,6 @@ int memory_size;
 
 void copy_ptr(ptr *source, ptr *dest) {
   dest->block = source->block;
-  dest->block->header = source->block->header;
   dest->error = source->error;
 }
 
@@ -36,7 +35,7 @@ int init_memory(int _block_size, int _blocks_count) {
   return memory_size;
 }
 
-int get_extended_blocks_count(ptr pointer) {
+unsigned char get_extended_blocks_count(ptr pointer) {
   return pointer.block->header >> 4;
 }
 void set_extended_blocks_count(ptr pointer, int count) {
@@ -87,6 +86,7 @@ int free_ptr(ptr *pointer) {
     return TRY_TO_FREE_ERROR_POINTER;
   }
 
+//  check is this block last
   if ((pointer->block + ((pointer->block->header >> 4) + 1) * block_size) == current_block_ptr.block) {
     current_block_ptr.block = pointer->block;
     set_extended_blocks_count(current_block_ptr, 0);
@@ -96,13 +96,15 @@ int free_ptr(ptr *pointer) {
     copy_ptr(&main_ptr, &temp);
     int blocks_count_to_deleting = 0;
     while (temp.block!=current_block_ptr.block){
+      unsigned char ext_blocks = get_extended_blocks_count(temp)+1;
       if (temp.block->header&IS_BLOCK_FREE){
-        blocks_count_to_deleting+=get_extended_blocks_count(temp);
+        blocks_count_to_deleting+= ext_blocks;
       } else{
         blocks_count_to_deleting=0;
       }
-      temp.block+= (get_extended_blocks_count(temp)+1)*block_size;
+      temp.block+= ext_blocks*block_size;
     }
+    current_block_ptr.block-=blocks_count_to_deleting*block_size;
   } else {
     pointer->block->header ^= IS_BLOCK_FREE;
   }

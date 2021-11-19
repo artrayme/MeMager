@@ -113,10 +113,8 @@ void test_memory_free() {
   free_ptr(&ptr12);
   test_one_free(5, ptr11, NULL_POINTER, get_memory_current_ptr().block != get_memory_start_ptr().block);
 
-  ptr back_ptr13;
-  copy_ptr(&ptr13, &back_ptr13);
   free_ptr(&ptr13);
-  test_one_free(6, ptr13, NULL_POINTER, get_memory_current_ptr().block == back_ptr13.block);
+  test_one_free(6, ptr13, NULL_POINTER, get_memory_current_ptr().block == get_memory_start_ptr().block);
 }
 
 void test_memory_read_and_write() {
