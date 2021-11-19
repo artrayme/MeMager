@@ -13,7 +13,7 @@ MeMager is a simple memory manager with a block memory structure (but I'm not su
 
 ## Architecture
 
-Memory manager at initialisation make request to the operating system memory by the system-call. Then split (actually
+The memory manager makes a request to the operating system memory during initialization with a system call. Then split (actually
 no) memory by blocks. Each block has the same structure: header-byte and raw memory. The header describe information of
 this block (see section [Memory block](#Memory-block)). But sometimes header is useless. So, block has the header only
 if pointer to this block created.
@@ -47,8 +47,8 @@ copying from memory to the buffer.
 ## Memory block
 
 The most complex and interesting part)
-Each memory block as a structure has fixed size, but in some cases multiple cases "glued" together. For example, if you
-try to allocate more memory than block_size, result "block" will have single header for group of blocks-structs.
+Each memory block as a structure has fixed size, but in some cases multiple blocks "glued" together. For example, if you
+try to allocate more memory than block_size, result "block" will have single header for group of block-structs.
 
 ### Example
 
