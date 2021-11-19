@@ -10,9 +10,12 @@
 //Block header masks
 #define IS_BLOCK_FREE 0x1
 #define IS_EXTENDED 0x2
+
+//Not implemented(
 #define IS_READABLE 0x4
+//Not implemented(
 #define IS_WRITABLE 0x8
-#define EXTENDED_SIZE 0xF0
+
 #define DEFAULT_BLOCK_STATE IS_BLOCK_FREE + IS_READABLE + IS_WRITABLE
 
 #define SUCCESS 0
@@ -34,7 +37,17 @@
 #define TRY_TO_REWRITE_ERROR_POINTER -1
 #define TRY_TO_REWRITE_BIGGER_POINTER_THEN_SOURCE -2
 
-// Block structure
+
+/*
+ * Block structure
+ *
+ * Header description (from the lowest byte):
+ * 1. IS_BLOCK_FREE
+ * 2. IS_EXTENDED
+ * 3. IS_READABLE
+ * 4. IS_WRITABLE
+ * 5-8. Count of extended blocks.
+ * */
 typedef struct memory_block {
   unsigned char header;
 } block_struct;
