@@ -17,10 +17,11 @@ void copy_ptr(ptr *source, ptr *dest) {
 }
 
 int init_memory(int _block_size, int _blocks_count) {
-  if (_block_size < 1 || _blocks_count < 1) return ILLEGAL_MEMORY_INIT_ARGUMENTS;
+  if (_block_size < 0 || _blocks_count < 0) return ILLEGAL_MEMORY_INIT_ARGUMENTS;
   if (memory_size > 0) {
     free(main_ptr.block);
   }
+  if (_block_size == 0 && _blocks_count == 0) return SUCCESS;
   memory_size = _block_size * _blocks_count;
   blocks_count = _blocks_count;
   block_size = _block_size;
