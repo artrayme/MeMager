@@ -25,30 +25,42 @@ int init_memory(int _block_size, int _blocks_count) {
     memory_size = 0;
     return SUCCESS;
   }
+
+  //  memory size calculation
   memory_size = _block_size * _blocks_count;
   blocks_count = _blocks_count;
   block_size = _block_size;
 
+  //  init main pointer
   main_ptr.block = malloc(memory_size);
-  ptr max_address = main_ptr;
-  max_address.block += memory_size;
-  for (ptr allocation_pointer = main_ptr; allocation_pointer.block < max_address.block; allocation_pointer.block += _block_size) {
-    allocation_pointer.block->header = DEFAULT_BLOCK_STATE;
-  }
+  main_ptr.block->header = DEFAULT_BLOCK_STATE;
   current_block_ptr = main_ptr;
   return memory_size;
 }
 
 unsigned char get_extended_blocks_count(ptr pointer) {
+  //  shift right to cut all flag bits.
+  //  for example:
+  //  0101_1111
+  //  4 right bits will be deleted. And, in result, we will get 0000_0101.
+  //  This is 5 in decimal. 5 extended blocks.
   return pointer.block->header >> 4;
 }
-void set_extended_blocks_count(ptr pointer, int count) {
-  char result_header = pointer.block->header & 0b00001111;
+
+void set_extended_blocks_count(ptr pointer, unsigned char count) {
+  //  get only header bits (cleanup place for extended blocks count bits)
+  unsigned char result_header = pointer.block->header & 0b00001111;
+
+  //  write new extended blocks count bits
+  //  example: result_header = 0000_1011, count = 0000_0101
+  //  at first step - shift left (4):  result_header = 0000_1011, count = 0101_0000
+  //  at second step - OR operation: result_header = 0101_1011
   result_header |= (count << 4);
   pointer.block->header = result_header;
 }
 
 int calc_real_available_memory() {
+//  you could do a more accurate calculation, but it's scary)0)
   return main_ptr.block + memory_size - current_block_ptr.block - (main_ptr.block + memory_size - current_block_ptr.block) / block_size * sizeof(block_struct);
 }
 
@@ -65,12 +77,14 @@ ptr alloc_ptr(int size) {
     int extended_blocks_count = 0;
     allocated_memory += block_size - sizeof(block_struct);
     current_block_ptr.block += block_size;
+//    allocate blocks while size of allocated blocks smaller than required size
     while (size > allocated_memory) {
       allocated_memory += block_size - sizeof(block_struct);
       current_block_ptr.block->header = 0;
       current_block_ptr.block += block_size;
       extended_blocks_count++;
     }
+//    init first allocated block header
     started_value.block->header = DEFAULT_BLOCK_STATE;
     started_value.block->header ^= IS_BLOCK_FREE;
     if (extended_blocks_count > 0) {
@@ -99,6 +113,7 @@ int free_ptr(ptr *pointer) {
     ptr temp;
     copy_ptr(&main_ptr, &temp);
     int blocks_count_to_deleting = 0;
+//    deep freeing
     while (temp.block != current_block_ptr.block) {
       unsigned char ext_blocks = get_extended_blocks_count(temp) + 1;
       if (temp.block->header & IS_BLOCK_FREE) {
