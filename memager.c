@@ -21,7 +21,10 @@ int init_memory(int _block_size, int _blocks_count) {
   if (memory_size > 0) {
     free(main_ptr.block);
   }
-  if (_block_size == 0 && _blocks_count == 0) return SUCCESS;
+  if (_block_size == 0 || _blocks_count == 0) {
+    memory_size = 0;
+    return SUCCESS;
+  }
   memory_size = _block_size * _blocks_count;
   blocks_count = _blocks_count;
   block_size = _block_size;

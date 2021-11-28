@@ -29,7 +29,7 @@ void test_memory_init() {
     for (int j = -1; j < 10; ++j) {
       test_number++;
       int res = init_memory(i, j);
-      if (i < 1 || j < 1) {
+      if (i < 0 || j < 0) {
         if (res == ILLEGAL_MEMORY_INIT_ARGUMENTS) {
           printf("PASSED init test number %d\n", test_number);
         } else {
