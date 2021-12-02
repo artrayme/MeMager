@@ -11,6 +11,16 @@ MeMager is a simple memory manager with a block memory structure (but I'm not su
 * read data
 * move pointer (it's a trap)
 
+## How to build and run 
+On Linux you can do the following
+
+```shell
+cmake -B build
+cd build 
+make 
+./MeMager
+```
+
 ## Architecture
 
 The memory manager makes a request to the operating system memory during initialization with a system call. Then split (actually
